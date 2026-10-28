@@ -90,6 +90,11 @@ class ExportTests(unittest.TestCase):
             with self.subTest(uri=uri), self.assertRaises(ValueError):
                 exporter.relative_key(uri, "ecg-pipeline", self.prefix)
 
+    def test_hub_compatible_leipzig_paths_preserve_extensions(self):
+        self.assertEqual(exporter.hub_relative_path("x001.parquet"), "recording-x001.parquet")
+        self.assertEqual(exporter.hub_relative_path("x001.annotations.json"), "recording-x001.annotations.json")
+        self.assertEqual(exporter.hub_relative_path("record.parquet"), "record.parquet")
+
     def test_incomplete_report_does_not_leave_publishable_directory(self):
         self.objects[self.prefix + "stale.parquet"] = b"unregistered"
         with tempfile.TemporaryDirectory() as temp:

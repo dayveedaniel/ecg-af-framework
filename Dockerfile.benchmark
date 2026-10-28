@@ -3,7 +3,7 @@ FROM python:3.11-slim-bookworm
 LABEL org.opencontainers.image.title="ECG-AF framework" \
     org.opencontainers.image.source="https://github.com/dayveedaniel/ecg-af-framework" \
     org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.version="0.1.0"
+    org.opencontainers.image.version="0.1.1"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openjdk-17-jre-headless \

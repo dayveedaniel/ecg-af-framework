@@ -108,9 +108,9 @@ Build from the repository root. The default includes CPU PyTorch, Java 17,
 Spark, the benchmark CLI, dashboard assets, and ingestion tools:
 
 ```bash
-docker build -f Dockerfile.benchmark -t ecg-af-benchmark:0.1.0 .
-docker run --rm ecg-af-benchmark:0.1.0 --help
-docker run --rm ecg-af-benchmark:0.1.0 validate-config \
+docker build -f Dockerfile.benchmark -t ecg-af-benchmark:0.1.1 .
+docker run --rm ecg-af-benchmark:0.1.1 --help
+docker run --rm ecg-af-benchmark:0.1.1 validate-config \
   --config /app/py_ecg_benchmark_pkg/examples/benchmark.yaml --skip-env
 ```
 
@@ -143,11 +143,11 @@ For Docker Hub publication, replace `DOCKER_OWNER` with your namespace:
 
 ```bash
 docker login
-docker tag ecg-af-benchmark:0.1.0 DOCKER_OWNER/ecg-af-benchmark:0.1.0
-docker push DOCKER_OWNER/ecg-af-benchmark:0.1.0
+docker tag ecg-af-benchmark:0.1.1 DOCKER_OWNER/ecg-af-benchmark:0.1.1
+docker push DOCKER_OWNER/ecg-af-benchmark:0.1.1
 ```
 
-Alternatively use `ghcr.io/dayveedaniel/ecg-af-benchmark:0.1.0` on GitHub Container
+Alternatively use `ghcr.io/dayveedaniel/ecg-af-benchmark:0.1.1` on GitHub Container
 Registry. Push only after the image builds and the smoke commands pass.
 This Dockerfile is a release starting point, not a claim of bit-for-bit
 reproducibility: Python packages use the project's version ranges and the base
@@ -166,7 +166,7 @@ drafts. Before tagging:
 3. Build a wheel and source distribution of `py_ecg_benchmark_pkg`; run its
    tests and the container smoke commands above.
 4. Publish the dataset and record its Hub repository and immutable revision.
-5. Commit the reviewed changes, tag `v0.1.0`, and create a GitHub Release with
+5. Commit the reviewed changes, tag `v0.1.1`, and create a GitHub Release with
    the wheel/sdist, tested image tag/digest, and dataset link.
 
 The benchmark wheel exposes the CLI and Python API. The dashboard currently
