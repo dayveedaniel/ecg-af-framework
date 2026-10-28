@@ -1,0 +1,34 @@
+services:
+  spark-eda:
+    image: ecg-af-spark-eda:latest
+    build:
+      context: ..
+      dockerfile: experiments/data_pipeline_test/Dockerfile.spark
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_started
+    environment:
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://minio:9000}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ecg-pipeline
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SPARK_MASTER: local[*]
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN:-ecg}
+      PYTHONPATH: /home/jovyan/py_ecg_benchmark_pkg/src:/usr/local/spark/python:/usr/local/spark/python/lib/py4j-0.10.9.7-src.zip
+      # Add S3A connector classes (org.apache.hadoop.fs.s3a.S3AFileSystem) to Spark runtime.
+      PYSPARK_SUBMIT_ARGS: --packages org.apache.hadoop:hadoop-aws:3.3.4 pyspark-shell
+    ports:
+      - "8889:8888"
+    volumes:
+      - ../experiments/data_pipeline_test:/home/jovyan/work
+      - ../py_ecg_benchmark_pkg:/home/jovyan/py_ecg_benchmark_pkg:ro
+    working_dir: /home/jovyan/work

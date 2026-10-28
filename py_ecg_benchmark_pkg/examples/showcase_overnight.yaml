@@ -1,0 +1,116 @@
+# Research showcase overnight config.
+#
+# Keeps the same nine showcase models as showcase_full.yaml, but uses denser
+# 5-second windows and a larger CPU neural budget for an unattended overnight
+# run. This is still a framework demonstration, not exact paper reproduction.
+random_seed: 20260428
+
+experiment:
+  name: showcase-overnight-stride5-epochs10
+  description: Overnight cross-dataset showcase with 5-second stride and larger raw-waveform neural training budgets.
+
+data:
+  source_datasets:
+    - af-termination-challenge-database
+    - arrhythmias-in-children-and-patients-with-congenital-heart-disease
+    - cpsc-2021-paroxysmal-af-event-detection-dataset
+    - mit-bih-atrial-fibrillation-database
+  target_datasets:
+    - af-termination-challenge-database
+    - arrhythmias-in-children-and-patients-with-congenital-heart-disease
+    - cpsc-2021-paroxysmal-af-event-detection-dataset
+    - mit-bih-atrial-fibrillation-database
+  sample_rate_hz: 250
+  processed_prefix: processed
+  window_seconds: 10
+  stride_seconds: 5
+  label_policy: af_vs_nsr
+  lead_policy: single_preferred_lead
+  preferred_leads: [II, MLII, I, V1, ECG]
+  recording_aggregation: mean
+  recording_label_policy: fraction_threshold
+  recording_label_threshold: 0.5
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    stratify_by: dataset_af_present
+
+storage:
+  artifact_bucket: ecg-pipeline
+  artifact_prefix: benchmarks/runs
+  cache_prefix: benchmarks/cache
+  source_bucket: ecg-pipeline
+
+reuse:
+  enabled: true
+  splits: true
+  features: true
+  mode: auto
+
+database:
+  host_env: POSTGRES_HOST
+  port_env: POSTGRES_PORT
+  db_env: POSTGRES_DB
+  user_env: POSTGRES_USER
+  password_env: POSTGRES_PASSWORD
+
+spark:
+  master_env: SPARK_MASTER
+  app_name: ecg-af-benchmark-showcase-overnight
+  driver_memory: 6g
+
+models:
+  - id: tateno_glass_rr_histogram
+  - id: lake_moorman_cosen
+  - id: petrenas_low_complexity_detector
+  - id: zabihi_rf_handcrafted
+    params:
+      feature_columns: &showcase_features
+        - rr_count
+        - rr_mean
+        - rr_std
+        - rr_cv
+        - signal_mean
+        - signal_std
+        - signal_min
+        - signal_max
+        - signal_range
+      n_estimators: 250
+      class_weight: balanced
+  - id: bin_adaboost_tree_ensemble
+    params:
+      feature_columns: *showcase_features
+      n_estimators: 120
+      learning_rate: 0.5
+      max_depth: 2
+  - id: goodfellow_xgboost_multifeature
+    params:
+      feature_columns: *showcase_features
+      backend: sklearn
+      n_estimators: 200
+      learning_rate: 0.05
+      max_depth: 3
+  - id: xiong_skip_cnn_1d
+    params: &overnight_neural
+      epochs: 10
+      batch_size: 64
+      learning_rate: 0.0007
+      max_train_windows: 4096
+      target_length: 2500
+      device: cpu
+  - id: zihlmann_crnn_spectrogram
+    params: *overnight_neural
+  - id: cpsc2021_resnet_transformer
+    params: *overnight_neural
+
+metrics:
+  - n
+  - positive
+  - negative
+  - auroc
+  - average_precision
+  - accuracy
+  - f1
+  - sensitivity
+  - specificity

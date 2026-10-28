@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</helmet>
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:56px 64px;background:#e7e5df;font-family:'IBM Plex Mono',ui-monospace,monospace">
+
+  <div style="max-width:1460px;margin-bottom:44px">
+    <div style="font-size:12px;letter-spacing:2px;color:#9a968c;font-weight:600;margin-bottom:10px">FLOWCHART</div>
+    <div style="font-size:30px;font-weight:700;color:#23211c;letter-spacing:-0.5;font-family:'IBM Plex Sans',system-ui,sans-serif">Data Pipeline Architecture</div>
+    <div style="font-size:14px;color:#6f6b61;margin-top:10px;line-height:1.55;font-family:'IBM Plex Sans',system-ui,sans-serif;max-width:860px">Three-stage ECG ingestion flow driven by per-dataset manifests: acquire raw files into object storage, standardise waveforms + annotation sidecars at 250 Hz, then register a queryable metadata catalogue in PostgreSQL.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:52px">
+    <div>
+      <div style="width:1460px;border-radius:3px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.12);--bg:#fbfbf9;--grid:#ecebe6;--panel:#ffffff;--ink:#1f2329;--muted:#868c95;--read:#aeb4bc;--frame:#dad9d3;--flow:#3a4049;--s1:#7c5cff;--s2:#e3850a;--s3:#2f6fed;--adapter:#0e9f6e;--store:#868c95;--term:#e02f4f">
+        <div style="width:100%"><svg viewBox="0 0 1500 680" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;background:var(--bg,#fbfbf9)" role="img" aria-label="Data pipeline architecture schematic">
+  <defs>
+    <pattern id="g2" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="var(--grid,#ecebe6)" stroke-width="1"/>
+    </pattern>
+    <marker id="mf"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--flow,#3a4049)"/></marker>
+    <marker id="ms1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--s1,#7c5cff)"/></marker>
+    <marker id="ms2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--s2,#e3850a)"/></marker>
+    <marker id="ms3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--s3,#2f6fed)"/></marker>
+    <marker id="mad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--adapter,#0e9f6e)"/></marker>
+    <marker id="mr"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="var(--read,#aeb4bc)"/></marker>
+  </defs>
+
+  <!-- background + frame -->
+  <rect x="0" y="0" width="1500" height="680" fill="var(--bg,#fbfbf9)"/>
+  <rect x="20" y="20" width="1460" height="640" rx="2" fill="url(#g2)" stroke="var(--frame,#dad9d3)" stroke-width="1"/>
+  <path d="M32 46V32H46 M1468 32H1454 M1468 32V46 M32 641V655H46 M1468 655H1454 M1468 655V641" fill="none" stroke="var(--frame,#dad9d3)" stroke-width="1.4"/>
+
+  <!-- title -->
+  <text x="40" y="60" font-size="28" font-weight="700" fill="var(--ink,#1f2329)" letter-spacing="-0.5">Data Pipeline Architecture</text>
+  <text x="42" y="82" font-size="12" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">acquire · standardise · register  ·  driven by manifest YAMLs</text>
+
+  <!-- column labels (y=100) -->
+  <text x="38"   y="102" font-size="10" font-weight="600" fill="var(--muted,#868c95)" letter-spacing="2">INPUTS</text>
+  <text x="272"  y="102" font-size="10" font-weight="600" fill="var(--muted,#868c95)" letter-spacing="2">01  ACQUIRE</text>
+  <text x="552"  y="102" font-size="10" font-weight="600" fill="var(--muted,#868c95)" letter-spacing="2">OBJECT STORE</text>
+  <text x="762"  y="102" font-size="10" font-weight="600" fill="var(--muted,#868c95)" letter-spacing="2">02  STANDARDISE</text>
+  <text x="1114" y="102" font-size="10" font-weight="600" fill="var(--muted,#868c95)" letter-spacing="2">OBJECT STORE</text>
+
+  <!-- ══════════════ INPUT BOXES (x=30–220) ══════════════ -->
+
+  <!-- manifests/*.yaml  y=112–178 -->
+  <rect x="30" y="112" width="190" height="66" rx="4" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="7 5"/>
+  <text x="42"  y="134" font-size="12" font-weight="600" font-family="'IBM Plex Mono',monospace" fill="var(--ink,#1f2329)">manifests/*.yaml</text>
+  <text x="42"  y="150" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">source URL · provider</text>
+  <text x="42"  y="164" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">adapter · metadata block</text>
+
+  <!-- pipeline_config.yaml  y=192–250 -->
+  <rect x="30" y="192" width="190" height="58" rx="4" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="7 5"/>
+  <text x="42"  y="212" font-size="12" font-weight="600" font-family="'IBM Plex Mono',monospace" fill="var(--ink,#1f2329)">pipeline_config.yaml</text>
+  <text x="42"  y="228" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">target rate · bucket</text>
+  <text x="42"  y="242" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">compression · timeouts</text>
+
+  <!-- .env  y=264–322 -->
+  <rect x="30" y="264" width="190" height="58" rx="4" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="7 5"/>
+  <text x="42"  y="284" font-size="12" font-weight="600" font-family="'IBM Plex Mono',monospace" fill="var(--ink,#1f2329)">.env  /  secrets</text>
+  <text x="42"  y="300" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">S3 endpoint + keys</text>
+  <text x="42"  y="314" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)">PostgreSQL DSN</text>
+
+  <!-- ══════════════ 01 ACQUIRE  (x=270–500, y=112–222) ══════════════ -->
+  <rect x="270" y="112" width="230" height="110" rx="3" fill="var(--panel,#fff)" stroke="var(--s1,#7c5cff)" stroke-width="2"/>
+  <rect x="272" y="115" width="5"   height="104" fill="var(--s1,#7c5cff)" rx="1"/>
+  <text x="285" y="131" font-size="9" font-weight="600" fill="var(--s1,#7c5cff)" letter-spacing="1">01</text>
+  <text x="385" y="143" font-size="15" font-weight="600" fill="var(--ink,#1f2329)" text-anchor="middle">Acquire</text>
+  <text x="385" y="161" font-size="10" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">Download · Extract · Prune</text>
+  <text x="385" y="176" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">physionet_s3 · zenodo</text>
+  <text x="385" y="190" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">figshare · direct_url</text>
+  <text x="385" y="208" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">provider strategies + auto-extract</text>
+  <!-- badge -->
+  <rect x="412" y="101" width="80" height="20" rx="10" fill="var(--panel,#fff)" stroke="var(--s1,#7c5cff)" stroke-width="1.2"/>
+  <text x="452" y="114.5" font-size="9.5" font-weight="600" fill="var(--s1,#7c5cff)" text-anchor="middle" letter-spacing="0.5">DOWNLOAD</text>
+
+  <!-- ══════════════ S3 raw/  (x=550–710, y=130–210) ══════════════ -->
+  <rect x="550" y="130" width="162" height="80" rx="4" fill="var(--panel,#fff)" stroke="var(--store,#868c95)" stroke-width="1.6"/>
+  <rect x="552" y="132" width="5"   height="76" fill="var(--store,#868c95)" rx="1"/>
+  <text x="632" y="154" font-size="12" font-weight="600" fill="var(--store,#868c95)" text-anchor="middle">S3  raw/</text>
+  <text x="632" y="170" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">raw/{dataset}/</text>
+  <text x="632" y="183" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">*.hea · *.dat · *.csv · ...</text>
+  <text x="632" y="196" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">_download_report.json</text>
+
+  <!-- ══════════════ 02 STANDARDISE  (x=762–1060, y=112–222) ══════════════ -->
+  <rect x="762" y="112" width="298" height="110" rx="3" fill="var(--panel,#fff)" stroke="var(--s2,#e3850a)" stroke-width="2"/>
+  <rect x="764" y="115" width="5"   height="104" fill="var(--s2,#e3850a)" rx="1"/>
+  <text x="778" y="131" font-size="9" font-weight="600" fill="var(--s2,#e3850a)" letter-spacing="1">02</text>
+  <text x="911" y="143" font-size="15" font-weight="600" fill="var(--ink,#1f2329)" text-anchor="middle">Standardise</text>
+  <text x="911" y="161" font-size="10" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">FormatDispatcher · WFDB · CSV · MAT · HDF5</text>
+  <text x="911" y="176" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">Annotation adapters (×6 datasets)</text>
+  <text x="911" y="190" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">Resample → 250 Hz · polyphase</text>
+  <text x="911" y="208" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">Write Parquet + annotation JSON sidecar</text>
+  <!-- badge -->
+  <rect x="980" y="101" width="72" height="20" rx="10" fill="var(--panel,#fff)" stroke="var(--s2,#e3850a)" stroke-width="1.2"/>
+  <text x="1016" y="114.5" font-size="9.5" font-weight="600" fill="var(--s2,#e3850a)" text-anchor="middle" letter-spacing="0.5">PROCESS</text>
+
+  <!-- ══════════════ S3 processed/  (x=1112–1352, y=130–210) ══════════════ -->
+  <rect x="1112" y="130" width="240" height="80" rx="4" fill="var(--panel,#fff)" stroke="var(--s2,#e3850a)" stroke-width="1.6"/>
+  <rect x="1114" y="132" width="5"   height="76" fill="var(--s2,#e3850a)" rx="1"/>
+  <text x="1232" y="154" font-size="12" font-weight="600" fill="var(--s2,#e3850a)" text-anchor="middle">S3  processed/</text>
+  <text x="1232" y="170" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">{rate}hz/{dataset}/</text>
+  <text x="1232" y="183" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">{rec}.parquet · .annotations.json</text>
+  <text x="1232" y="196" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">_processing_report.json</text>
+
+  <!-- ══════════════ ANNOTATION ADAPTERS  (x=530–758, y=255–323) — sits below S3 raw/ ══════════════ -->
+  <rect x="530" y="255" width="228" height="68" rx="4" fill="var(--panel,#fff)" stroke="var(--adapter,#0e9f6e)" stroke-width="1.6"/>
+  <rect x="532" y="257" width="5"   height="64" fill="var(--adapter,#0e9f6e)" rx="1"/>
+  <text x="644" y="277" font-size="12" font-weight="600" fill="var(--adapter,#0e9f6e)" text-anchor="middle">Annotation Adapters</text>
+  <text x="644" y="293" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">×6  mit-bih · cpsc2021 · iridia · ncku · ...</text>
+  <text x="644" y="308" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">AF · AFL · NSR · OTHER  canonical labels</text>
+  <!-- badge -->
+  <rect x="680" y="244" width="70" height="20" rx="10" fill="var(--panel,#fff)" stroke="var(--adapter,#0e9f6e)" stroke-width="1.2"/>
+  <text x="715" y="257.5" font-size="9.5" font-weight="600" fill="var(--adapter,#0e9f6e)" text-anchor="middle" letter-spacing="0.5">ENRICH</text>
+
+  <!-- ══════════════ 03 REGISTER  (x=762–1012, y=355–455) ══════════════ -->
+  <rect x="762" y="355" width="250" height="100" rx="3" fill="var(--panel,#fff)" stroke="var(--s3,#2f6fed)" stroke-width="2"/>
+  <rect x="764" y="358" width="5"   height="94" fill="var(--s3,#2f6fed)" rx="1"/>
+  <text x="778" y="374" font-size="9" font-weight="600" fill="var(--s3,#2f6fed)" letter-spacing="1">03</text>
+  <text x="887" y="386" font-size="15" font-weight="600" fill="var(--ink,#1f2329)" text-anchor="middle">Register</text>
+  <text x="887" y="404" font-size="10" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">MetadataRegistrar</text>
+  <text x="887" y="420" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">upsert datasets + recordings</text>
+  <text x="887" y="435" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">af_present · parquet_path flags</text>
+  <text x="887" y="449" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">refresh dataset aggregates</text>
+  <!-- badge -->
+  <rect x="960" y="344" width="70" height="20" rx="10" fill="var(--panel,#fff)" stroke="var(--s3,#2f6fed)" stroke-width="1.2"/>
+  <text x="995" y="357.5" font-size="9.5" font-weight="600" fill="var(--s3,#2f6fed)" text-anchor="middle" letter-spacing="0.5">CATALOG</text>
+
+  <!-- ══════════════ PostgreSQL catalog  (x=1064–1352, y=368–448) ══════════════ -->
+  <rect x="1064" y="368" width="288" height="80" rx="4" fill="var(--panel,#fff)" stroke="var(--s3,#2f6fed)" stroke-width="1.8"/>
+  <rect x="1066" y="370" width="5"   height="76" fill="var(--s3,#2f6fed)" rx="1"/>
+  <text x="1208" y="394" font-size="14" font-weight="600" fill="var(--s3,#2f6fed)" text-anchor="middle">PostgreSQL</text>
+  <text x="1208" y="412" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">ecg_metadata  ·  datasets · recordings</text>
+  <text x="1208" y="427" font-size="9.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">full_recording_id · af_present · paths</text>
+  <text x="1208" y="440" font-size="9"  font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">queried by benchmark splits + feature jobs</text>
+
+  <!-- ══════════════════════════════════════════════════
+       CONNECTIONS
+       ══════════════════════════════════════════════════
+
+       All write/flow arrows are solid; read arrows are dashed grey.
+
+       WIRE MAP
+       ─────────────────────────────────────────────────
+       A  manifests  → Acquire      dashed read   y=140
+       B  Acquire    → S3 raw       s1 purple     y=170
+       C  S3 raw     → Standardise  dashed read   y=170
+       D  Standardise→ S3 processed s2 orange     y=170
+       E  Adapters   → Standardise  green L-bend  right from (758,289) then up to Standardise bottom
+       F  Standardise→ Register     dark down     x=877
+       G  S3 processed→ Register    dashed read   from (1232,210) down → left → Register top
+       H  manifests  → Register     dashed read   down left side (x=248) then right to Register
+       I  Register   → PostgreSQL   s3 blue       y=405
+  ══════════════════════════════════════════════════════ -->
+
+  <!-- A: manifests → Acquire  (dashed read, y=140) -->
+  <path d="M220,140 H266" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#mr)"/>
+
+  <!-- B: Acquire → S3 raw  (purple write arrow, y=170) -->
+  <path d="M500,170 H546" fill="none" stroke="var(--s1,#7c5cff)" stroke-width="1.8" marker-end="url(#ms1)"/>
+  <!-- wire label -->
+  <text x="523" y="164" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--s1,#7c5cff)" text-anchor="middle">writes</text>
+
+  <!-- C: S3 raw → Standardise  (dashed read, y=170) -->
+  <path d="M712,170 H758" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#mr)"/>
+  <!-- wire label -->
+  <text x="735" y="164" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">reads</text>
+
+  <!-- D: Standardise → S3 processed  (orange write, y=170) -->
+  <path d="M1060,170 H1108" fill="none" stroke="var(--s2,#e3850a)" stroke-width="1.8" marker-end="url(#ms2)"/>
+  <!-- wire label -->
+  <text x="1084" y="164" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--s2,#e3850a)" text-anchor="middle">writes</text>
+
+  <!-- E: Adapters → Standardise  (green L-bend: right from Adapters right edge, then up into Standardise bottom) -->
+  <path d="M758,289 H800 V222" fill="none" stroke="var(--adapter,#0e9f6e)" stroke-width="1.8" marker-end="url(#mad)"/>
+  <text x="814" y="260" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--adapter,#0e9f6e)">enrich()</text>
+
+  <!-- F: Standardise → Register  (dark flow arrow, x=910, from y=222 to y=351) -->
+  <path d="M910,222 V351" fill="none" stroke="var(--flow,#3a4049)" stroke-width="2" marker-end="url(#mf)"/>
+  <text x="930" y="290" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--flow,#3a4049)">results</text>
+
+  <!-- G: S3 processed → Register  (dashed read)
+       Route: from (1232,210) straight down to y=352, then left to Register top centre (887,352).
+       Route: down from S3-processed bottom-centre (1232,210) → left at y=348 (above PG top y=368)
+       → turn down at x=920 and arrive at Register top (y=355) with a downward arrowhead.
+       F arrow is at x=910, so x=920 keeps a 10 px clearance. -->
+  <path d="M1232,210 V316 H920 V355" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#mr)"/>
+  <text x="1256" y="284" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">reads</text>
+  <text x="1256" y="296" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle">_report.json</text>
+
+  <!-- H: manifests → Register  (dashed read, routes down left spine then right)
+       Exits manifests bottom-right at (220,170), stub right to x=248, down to y=420,
+       right to Register left edge (762,420). -->
+  <path d="M220,170 H248 V420 H758" fill="none" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#mr)"/>
+  <text x="236" y="310" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--muted,#868c95)" text-anchor="middle" writing-mode="vertical-rl" style="writing-mode:vertical-rl;text-orientation:mixed">metadata block</text>
+
+  <!-- I: Register → PostgreSQL  (blue write arrow, y=405) -->
+  <path d="M1012,405 H1060" fill="none" stroke="var(--s3,#2f6fed)" stroke-width="1.8" marker-end="url(#ms3)"/>
+  <text x="1036" y="399" font-size="8.5" font-family="'IBM Plex Sans',system-ui,sans-serif" fill="var(--s3,#2f6fed)" text-anchor="middle">upsert</text>
+
+  <!-- ══════════════ LEGEND ══════════════ -->
+  <g font-family="'IBM Plex Mono',monospace" font-size="11">
+    <!-- s1 purple -->
+    <path d="M50 594H76"  stroke="var(--s1,#7c5cff)"  stroke-width="2" marker-end="url(#ms1)"/>
+    <text x="84"  y="598" fill="var(--ink,#1f2329)">acquire write</text>
+    <!-- s2 orange -->
+    <path d="M194 594H220" stroke="var(--s2,#e3850a)" stroke-width="2" marker-end="url(#ms2)"/>
+    <text x="228" y="598" fill="var(--ink,#1f2329)">standardise write</text>
+    <!-- s3 blue -->
+    <path d="M370 594H396" stroke="var(--s3,#2f6fed)" stroke-width="2" marker-end="url(#ms3)"/>
+    <text x="404" y="598" fill="var(--ink,#1f2329)">catalog write</text>
+    <!-- adapter green -->
+    <path d="M510 594H536" stroke="var(--adapter,#0e9f6e)" stroke-width="2" marker-end="url(#mad)"/>
+    <text x="544" y="598" fill="var(--ink,#1f2329)">annotation enrich</text>
+    <!-- flow dark -->
+    <path d="M678 594H704" stroke="var(--flow,#3a4049)" stroke-width="2" marker-end="url(#mf)"/>
+    <text x="712" y="598" fill="var(--ink,#1f2329)">pipeline flow</text>
+    <!-- read dashed -->
+    <path d="M822 594H848" stroke="var(--read,#aeb4bc)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#mr)"/>
+    <text x="856" y="598" fill="var(--ink,#1f2329)">config / read</text>
+  </g>
+</svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

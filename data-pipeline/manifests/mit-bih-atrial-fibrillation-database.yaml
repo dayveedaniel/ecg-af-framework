@@ -1,0 +1,35 @@
+dataset:
+  name: "mit-bih-atrial-fibrillation-database"
+  display_name: "MIT-BIH Atrial Fibrillation Database"
+  version: "1.0.0"
+
+source:
+  url: "https://physionet.org/content/afdb/1.0.0/"
+  provider: "physionet_s3"
+
+force_redownload: false
+
+metadata:
+  description: "Long-term two-lead ECG recordings from 25 subjects with rhythm-change and beat annotations for atrial fibrillation analysis."
+  citation: "Moody GB, Mark RG. A new method for detecting atrial fibrillation using R-R intervals. Computers in Cardiology. 1983;10:227-230. Dataset: PhysioNet AFDB v1.0.0 (https://physionet.org/content/afdb/1.0.0/)."
+  license: "ODC-By 1.0"
+  geographic_origin: "Beth Israel Hospital, Boston, USA"
+  num_subjects: 25
+  num_recordings: 25
+  leads:
+    - "ECG1"
+    - "ECG2"
+
+annotations:
+  adapter: "mit_bih_afdb_v1"
+  options:
+    rhythm_annotation_extension: "atr"
+    corrected_beat_annotation_extension: "qrsc"
+    automated_beat_annotation_extension: "qrs"
+  available: true
+  types:
+    - "beat_labels"
+    - "rhythm_labels"
+
+quirks:
+  - "Records 00735 and 03665 include annotations but no waveform (.dat) signal file."

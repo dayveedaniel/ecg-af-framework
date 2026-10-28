@@ -1,0 +1,36 @@
+dataset:
+  name: "iridia-af-database"
+  display_name: "IRIDIA-AF Database"
+  version: "1.0.1"
+
+source:
+  url: "https://zenodo.org/records/8405941"
+  provider: "zenodo"
+
+force_redownload: false
+
+metadata:
+  description: "Long-term two-lead (lead I and II) Holter ECG recordings from 152 patients with paroxysmal atrial fibrillation, sampled at 200 Hz, with expert-reviewed AF onset/termination episode annotations."
+  citation: "Gilon C, Gregoire J-M, Mathieu M, Carlier S, Bersini H. IRIDIA-AF, a large paroxysmal atrial fibrillation long-term electrocardiogram monitoring database. Scientific Data. 2023;10:714. https://doi.org/10.1038/s41597-023-02621-1. Dataset: Zenodo v1.0.1 (https://zenodo.org/records/8405941)."
+  license: "CC BY 4.0"
+  geographic_origin: "Belgium"
+  num_subjects: 152
+  num_recordings: 167
+  leads:
+    - "ECG1"
+    - "ECG2"
+
+annotations:
+  adapter: "iridia_af_v1"
+  options:
+    sampling_rate_hz: 200
+    calibration_samples: 6000
+  available: true
+  types:
+    - "rhythm_labels"
+
+quirks:
+  - "Records are split into multiple 24-hour HDF5 files (record_XXX_ecg_NN.h5); each file is treated as one recording."
+  - "RR-interval HDF5 files (record_XXX_rr_NN.h5) and all CSV files (metadata + *_ecg_labels.csv + *_rr_labels.csv) are sidecars excluded from waveform discovery."
+  - "AF episodes in *_ecg_labels.csv use sample indices (start_qrs_index/end_qrs_index) and may span multiple 24-hour files."
+  - "The first ~6000 samples (30 s at 200 Hz) of each record are a device calibration phase; signals are kept untrimmed so annotation indices stay aligned."

@@ -1,0 +1,25 @@
+# Single source of truth for pipeline behavior (no secrets here).
+
+pipeline:
+  s3_bucket: "ecg-pipeline"
+  default_target_sample_rate: 250         # Hz
+  default_normalization: "none"           # "none", "zscore", "minmax"
+  parquet_compression: "snappy"
+
+processing:
+  min_recordings_for_spark: 50
+  spark_driver_memory: "8g"
+  spark_executor_memory: "4g"
+
+airflow:
+  max_active_datasets: 3
+  task_retries: 3
+  retry_delay_seconds: 300
+  retry_exponential_backoff: true
+
+download:
+  timeout_seconds: 60
+  chunk_size_bytes: 1048576
+  sleep_between_datasets_seconds: 0.2
+  physionet_s3_bucket: "physionet-open"
+

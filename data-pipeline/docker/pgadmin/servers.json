@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "ECG Metadata (docker)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "ecg_metadata",
+      "Username": "ecg_pipeline",
+      "SSLMode": "prefer"
+    }
+  }
+}
+

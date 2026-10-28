@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ECG AF Benchmark Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css?v=dashboard-qol-20260604">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div>
+          <h1>ECG AF Benchmarks</h1>
+          <p class="small muted" id="artifactRoot">Loading artifact root</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-tabs" aria-label="Dashboard views">
+        <button type="button" class="active" data-view="resultsView">Results</button>
+        <button type="button" data-view="explorerView">Explorer</button>
+        <button type="button" data-view="builderView">Config Builder</button>
+        <button type="button" data-view="runnerView">Run Experiment</button>
+        <button type="button" data-view="cacheView">Cache</button>
+      </nav>
+
+      <div class="sidebar-panel active" data-sidebar-panel="resultsView">
+        <div class="sidebar-tools">
+          <input class="control" id="runSearch" type="search" placeholder="Search runs">
+          <button class="btn" id="refreshButton" type="button">Refresh</button>
+        </div>
+        <div id="runErrors"></div>
+        <div class="run-list" id="runList"></div>
+      </div>
+
+      <div class="sidebar-panel" data-sidebar-panel="builderView">
+        <div class="sidebar-note">
+          <h3>Config Builder</h3>
+          <p class="small muted">Create, download, or save benchmark YAML without selecting a run.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-panel" data-sidebar-panel="explorerView">
+        <div class="sidebar-tools">
+          <button class="btn" id="refreshExplorerButton" type="button">Refresh</button>
+        </div>
+        <div id="explorerErrors"></div>
+        <div class="sidebar-note" style="margin-top:12px;">
+          <h3>Dataset And Model Explorer</h3>
+          <p class="small muted">Catalog summaries and supported benchmark model metadata.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-panel" data-sidebar-panel="runnerView">
+        <div class="sidebar-tools">
+          <button class="btn" id="refreshJobsButton" type="button">Refresh</button>
+        </div>
+        <div id="runnerErrors"></div>
+        <div class="sidebar-note" style="margin-top:12px;">
+          <h3>Experiment Queue</h3>
+          <p class="small muted" id="runnerQueueSummary">Loading jobs</p>
+        </div>
+        <div class="run-list" id="jobList"></div>
+      </div>
+
+      <div class="sidebar-panel" data-sidebar-panel="cacheView">
+        <div class="sidebar-tools">
+          <select class="control" id="cacheDatasetFilter"></select>
+          <button class="btn" id="refreshCacheButton" type="button">Refresh</button>
+        </div>
+        <div id="cacheErrors"></div>
+        <div class="sidebar-note" style="margin-top:12px;">
+          <h3>Cache Root</h3>
+          <p class="small muted" id="cacheRoot">Loading cache root</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="view active" id="resultsView">
+      <div class="topbar">
+        <div class="title-block">
+          <h2 id="experimentName">Benchmark Results</h2>
+          <p class="run-id" id="selectedRunId">Select a run</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn danger" id="deleteRunButton" type="button" disabled>Delete Results</button>
+          <span class="pill unknown" id="statusPill">unknown</span>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="stat">
+          <div class="stat-label">Elapsed</div>
+          <div class="stat-value" id="elapsedStat">--</div>
+          <div class="stat-detail" id="runTimeStat">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Window best</div>
+          <div class="stat-value" id="windowBestStat">--</div>
+          <div class="stat-detail" id="windowBestDetail">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Recording best</div>
+          <div class="stat-value" id="recordingBestStat">--</div>
+          <div class="stat-detail" id="recordingBestDetail">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Models</div>
+          <div class="stat-value" id="modelsStat">--</div>
+          <div class="stat-detail" id="datasetsStat">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Windowing</div>
+          <div class="stat-value" id="windowingStat">--</div>
+          <div class="stat-detail" id="samplingStat">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Metrics rows</div>
+          <div class="stat-value" id="metricRowsStat">--</div>
+          <div class="stat-detail" id="artifactCountStat">--</div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h3>Metric Comparison</h3>
+            <p class="small muted">Window-level and recording-level results from stored benchmark artifacts.</p>
+          </div>
+        </div>
+        <div class="filters">
+          <div class="segmented" aria-label="Evaluation level">
+            <button type="button" class="active" data-level="window">Window</button>
+            <button type="button" data-level="recording">Recording</button>
+          </div>
+          <select class="control" id="metricSelect"></select>
+          <select class="control" id="sourceSelect"></select>
+          <select class="control" id="targetSelect"></select>
+          <input class="control" id="modelSearch" type="search" placeholder="Filter models">
+        </div>
+        <div class="comparison-grid">
+          <div>
+            <div class="chart-panel-head">
+              <h3>Best Models</h3>
+            </div>
+            <div id="chartArea" class="bars"></div>
+          </div>
+          <div>
+            <div class="chart-panel-head">
+              <h3>Metric vs Time</h3>
+              <select class="control compact" id="timeModeSelect">
+                <option value="train_eval">Training + evaluation</option>
+                <option value="inference">Prediction only</option>
+              </select>
+            </div>
+            <div id="timeChartArea" class="time-chart"></div>
+          </div>
+        </div>
+        <div class="distribution-panel">
+          <div class="chart-panel-head">
+            <div>
+              <h3>Target Label Distribution</h3>
+              <p class="small muted">Positive and negative label composition for evaluated target cohorts.</p>
+            </div>
+          </div>
+          <div id="distributionChartArea" class="distribution-bars"></div>
+        </div>
+        <div class="table-wrap" style="margin-top: 14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Source</th>
+                <th>Target</th>
+                <th id="selectedMetricHead">Metric</th>
+                <th>AUROC</th>
+                <th>Avg precision</th>
+                <th>F1</th>
+                <th>Accuracy</th>
+                <th>Sensitivity</th>
+                <th>Specificity</th>
+                <th>n</th>
+              </tr>
+            </thead>
+            <tbody id="metricTableBody">
+              <tr><td colspan="11">Loading</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h3>Run Details</h3>
+        </div>
+        <div id="runDetails" class="small"></div>
+        <div class="chips" id="datasetChips"></div>
+        <div class="chips" id="modelChips"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h3>Artifacts</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Artifact</th><th>S3 URI</th><th>Updated</th><th>Size</th></tr>
+            </thead>
+            <tbody id="artifactTableBody">
+              <tr><td colspan="4">Loading</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </div>
+
+      <div class="view" id="runnerView">
+        <div class="topbar">
+          <div class="title-block">
+            <h2>Run Experiment</h2>
+            <p class="run-id">Queue benchmark configs and watch stage-level progress.</p>
+          </div>
+          <span class="pill unknown" id="runnerStatusPill">idle</span>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Config Source</h3>
+              <p class="small muted">Choose a package example, MinIO/S3 config, or upload a local YAML file.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="runnerSourceSelect">Source</label>
+              <select class="control" id="runnerSourceSelect">
+                <option value="package">Package example</option>
+                <option value="s3">MinIO/S3 config</option>
+                <option value="upload">Upload YAML</option>
+              </select>
+            </div>
+            <div class="field runner-source-field" data-runner-source="package">
+              <label for="runnerPackageSelect">Example</label>
+              <select class="control" id="runnerPackageSelect"></select>
+            </div>
+            <div class="field runner-source-field" data-runner-source="s3">
+              <label for="runnerS3Select">S3 config</label>
+              <select class="control" id="runnerS3Select"></select>
+            </div>
+            <div class="field runner-source-field" data-runner-source="s3">
+              <label for="runnerS3KeyInput">S3 key</label>
+              <input class="control" id="runnerS3KeyInput" type="text" placeholder="benchmarks/configs/showcase_smoke.yaml">
+            </div>
+            <div class="field runner-source-field" data-runner-source="upload">
+              <label for="runnerUploadInput">YAML file</label>
+              <input class="control" id="runnerUploadInput" type="file" accept=".yaml,.yml,.json">
+            </div>
+            <div class="field">
+              <label for="runnerRunIdInput">Run id override</label>
+              <input class="control" id="runnerRunIdInput" type="text" placeholder="Optional">
+            </div>
+          </div>
+          <div class="builder-actions" style="margin-top:14px;">
+            <button class="btn" id="loadRunnerConfigButton" type="button">Load Config</button>
+            <button class="btn primary" id="startRunnerJobButton" type="button" disabled>Queue Run</button>
+          </div>
+          <div class="validation" id="runnerValidationBox">No config loaded yet.</div>
+          <div class="form-grid two">
+            <div>
+              <h3>Config Preview</h3>
+              <pre class="preview" id="runnerConfigPreview"></pre>
+            </div>
+            <div>
+              <h3>Run Command</h3>
+              <pre class="preview" id="runnerCommandPreview">Load a config to preview the command.</pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Current Progress</h3>
+              <p class="small muted">One job runs at a time; queued jobs start automatically.</p>
+            </div>
+            <button class="btn danger" id="cancelRunnerJobButton" type="button" disabled>Cancel Running Job</button>
+          </div>
+          <div id="activeJobSummary" class="small muted">No active job.</div>
+          <div class="progress-track" aria-label="Experiment progress">
+            <div class="progress-fill" id="runnerProgressFill" style="width:0%"></div>
+          </div>
+          <div class="stage-list" id="stageList"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h3>Queue</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Config</th><th>Status</th><th>Submitted</th><th>Run id</th><th>Action</th></tr>
+              </thead>
+              <tbody id="queueTableBody">
+                <tr><td colspan="5">Loading</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h3>History</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Config</th><th>Status</th><th>Started</th><th>Finished</th><th>Run id</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr><td colspan="6">Loading</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="view" id="explorerView">
+        <div class="topbar">
+          <div class="title-block">
+            <h2>Explorer</h2>
+            <p class="run-id">Inspect registered datasets and supported model adapters.</p>
+          </div>
+          <span class="pill unknown" id="explorerStatusPill">loading</span>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Datasets</h3>
+              <p class="small muted" id="datasetExplorerStat">Catalog summary.</p>
+            </div>
+            <input class="control compact" id="datasetExplorerSearch" type="search" placeholder="Filter datasets">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dataset</th>
+                  <th>Recordings</th>
+                  <th>AF present</th>
+                  <th>Duration</th>
+                  <th>Sampling rates</th>
+                  <th>Leads</th>
+                  <th>Processed</th>
+                </tr>
+              </thead>
+              <tbody id="datasetExplorerBody">
+                <tr><td colspan="7">Loading</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Models</h3>
+              <p class="small muted" id="modelExplorerStat">Benchmark model registry.</p>
+            </div>
+            <input class="control compact" id="modelExplorerSearch" type="search" placeholder="Filter models">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Input</th>
+                  <th>Training</th>
+                  <th>Required columns</th>
+                  <th>Configurable params</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="modelExplorerBody">
+                <tr><td colspan="6">Loading</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="view" id="cacheView">
+        <div class="topbar">
+          <div class="title-block">
+            <h2>Cache</h2>
+            <p class="run-id">Reusable dataset-level split and feature partitions.</p>
+          </div>
+          <span class="pill unknown" id="cacheStatusPill">loading</span>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Cached Partitions</h3>
+              <p class="small muted">Delete removes the cached files for that dataset partition.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Dataset</th>
+                  <th>Key</th>
+                  <th>Settings</th>
+                  <th>Objects</th>
+                  <th>Updated</th>
+                  <th>S3 URI</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="cacheTableBody">
+                <tr><td colspan="8">Loading</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="view" id="builderView">
+        <div class="topbar">
+          <div class="title-block">
+            <h2>Config Builder</h2>
+            <p class="run-id">Create, validate, preview, and download benchmark YAML configs.</p>
+          </div>
+          <span class="pill unknown" id="builderStatusPill">draft</span>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Preset</h3>
+              <p class="small muted">Choose a starting point, then adjust the fields below.</p>
+            </div>
+          </div>
+          <div class="form-grid two">
+            <div class="field">
+              <label for="presetSelect">Preset</label>
+              <select class="control" id="presetSelect"></select>
+            </div>
+            <div class="field">
+              <label for="filenameInput">Download as</label>
+              <input class="control" id="filenameInput" type="text" placeholder="experiment-name.yaml">
+            </div>
+          </div>
+          <div class="small muted" id="builderWarnings" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h3>Basics</h3></div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="experimentNameInput">Experiment name</label>
+              <input class="control" id="experimentNameInput" type="text">
+            </div>
+            <div class="field">
+              <label for="randomSeedInput">Random seed</label>
+              <input class="control" id="randomSeedInput" type="number" min="0" step="1">
+            </div>
+            <div class="field">
+              <label for="sparkAppInput">Spark app name</label>
+              <input class="control" id="sparkAppInput" type="text">
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label for="experimentDescriptionInput">Description</label>
+            <textarea class="control textarea" id="experimentDescriptionInput"></textarea>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h3>Data</h3></div>
+          <div class="dataset-stack">
+            <div class="field">
+              <label>Source datasets</label>
+              <div class="multi-select" id="sourceDatasetCheckboxes"></div>
+              <div class="inline-add">
+                <input class="control" id="sourceDatasetManualInput" type="text" placeholder="Add source dataset">
+                <button class="btn" id="addSourceDatasetButton" type="button">Add</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Target datasets</label>
+              <div class="multi-select" id="targetDatasetCheckboxes"></div>
+              <div class="inline-add">
+                <input class="control" id="targetDatasetManualInput" type="text" placeholder="Add target dataset">
+                <button class="btn" id="addTargetDatasetButton" type="button">Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:12px;">
+            <div class="field">
+              <label for="sampleRateInput">Sample rate Hz</label>
+              <input class="control" id="sampleRateInput" type="number" min="1" step="1">
+            </div>
+            <div class="field">
+              <label for="windowSecondsInput">Window seconds</label>
+              <input class="control" id="windowSecondsInput" type="number" min="1" step="1">
+            </div>
+            <div class="field">
+              <label for="strideSecondsInput">Stride seconds</label>
+              <input class="control" id="strideSecondsInput" type="number" min="1" step="1">
+            </div>
+            <div class="field">
+              <label for="labelPolicySelect">Window label policy</label>
+              <select class="control" id="labelPolicySelect"></select>
+              <p class="small muted">Controls which rhythm labels become positive, negative, or dropped windows.</p>
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label>Preferred leads</label>
+            <div class="multi-select" id="preferredLeadCheckboxes"></div>
+            <div class="inline-add narrow">
+              <input class="control" id="preferredLeadManualInput" type="text" placeholder="Add lead">
+              <button class="btn" id="addPreferredLeadButton" type="button">Add</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head"><h3>Evaluation</h3></div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="trainRatioInput">Train ratio</label>
+              <input class="control" id="trainRatioInput" type="number" min="0" max="1" step="0.01">
+            </div>
+            <div class="field">
+              <label for="valRatioInput">Validation ratio</label>
+              <input class="control" id="valRatioInput" type="number" min="0" max="1" step="0.01">
+            </div>
+            <div class="field">
+              <label for="testRatioInput">Test ratio</label>
+              <input class="control" id="testRatioInput" type="number" min="0" max="1" step="0.01">
+            </div>
+            <div class="field">
+              <label for="stratifySelect">Split stratification</label>
+              <select class="control" id="stratifySelect"></select>
+            </div>
+            <div class="field">
+              <label for="recordingAggregationSelect">Recording aggregation</label>
+              <select class="control" id="recordingAggregationSelect"></select>
+            </div>
+            <div class="field">
+              <label for="recordingLabelPolicySelect">Recording label policy</label>
+              <select class="control" id="recordingLabelPolicySelect"></select>
+            </div>
+            <div class="field">
+              <label for="recordingThresholdInput">Recording label threshold</label>
+              <input class="control" id="recordingThresholdInput" type="number" min="0" max="1" step="0.01">
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <h3>Metrics</h3>
+            <div class="multi-select" id="metricsCheckboxes" style="margin-top:10px;"></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Models</h3>
+              <p class="small muted">Select models and edit common params or advanced JSON.</p>
+            </div>
+          </div>
+          <div class="multi-select" id="modelCheckboxes"></div>
+          <div class="model-editors" id="modelEditors"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h3>Review</h3>
+              <p class="small muted">Validate schema, preview resolved YAML, and download the config file.</p>
+            </div>
+          </div>
+          <div class="builder-actions">
+            <button class="btn primary" id="validateConfigButton" type="button">Validate</button>
+            <button class="btn" id="downloadConfigButton" type="button">Download YAML</button>
+            <button class="btn" id="saveConfigS3Button" type="button">Save to S3</button>
+            <label class="check-row"><input type="checkbox" id="connectionCheckInput"> Check connections</label>
+          </div>
+          <div class="validation" id="validationBox">Draft config has not been validated yet.</div>
+          <div class="form-grid two">
+            <div>
+              <h3>Command snippets</h3>
+              <pre class="preview" id="commandPreview">Validate or download a config to see commands.</pre>
+            </div>
+            <div>
+              <h3>YAML preview</h3>
+              <pre class="preview" id="yamlPreview"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js?v=dashboard-qol-20260604"></script>
+</body>
+</html>

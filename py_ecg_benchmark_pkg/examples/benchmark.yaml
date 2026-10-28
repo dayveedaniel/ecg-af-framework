@@ -1,0 +1,101 @@
+# Canonical AF benchmark config.
+#
+# This file is the normal starting point for a tabular/RR baseline benchmark.
+# For all paper-inspired showcase models, use showcase_smoke.yaml or
+# showcase_full.yaml.
+random_seed: 20260428
+
+experiment:
+  name: af-baseline-v1
+  description: Baseline AF-vs-NSR benchmark over processed ECG recordings.
+
+data:
+  # Source datasets train independent model instances.
+  source_datasets:
+    - mit-bih-atrial-fibrillation-database
+    - cpsc-2021-paroxysmal-af-event-detection-dataset
+
+  # Target datasets are evaluated with each trained source model.
+  target_datasets:
+    - mit-bih-atrial-fibrillation-database
+    - cpsc-2021-paroxysmal-af-event-detection-dataset
+
+  sample_rate_hz: 250
+  processed_prefix: processed
+  window_seconds: 10
+  stride_seconds: 5
+  # Supported: af_vs_nsr, af_vs_non_af, af_or_afl_vs_nsr, af_or_afl_vs_non_af.
+  label_policy: af_vs_nsr
+  lead_policy: single_preferred_lead
+  preferred_leads: [II, MLII, I, V1, ECG]
+
+  # Recording-level outputs are secondary; window-level metrics are primary.
+  recording_aggregation: mean
+  recording_label_policy: fraction_threshold
+  recording_label_threshold: 0.5
+
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    stratify_by: dataset_af_present
+
+storage:
+  artifact_bucket: ecg-pipeline
+  artifact_prefix: benchmarks/runs
+  cache_prefix: benchmarks/cache
+  source_bucket: ecg-pipeline
+
+reuse:
+  enabled: true
+  splits: true
+  features: true
+  mode: auto
+
+database:
+  host_env: POSTGRES_HOST
+  port_env: POSTGRES_PORT
+  db_env: POSTGRES_DB
+  user_env: POSTGRES_USER
+  password_env: POSTGRES_PASSWORD
+
+spark:
+  master_env: SPARK_MASTER
+  app_name: ecg-af-benchmark
+
+models:
+  - id: dummy_prior
+  - id: rr_irregularity_rule
+    params:
+      threshold: 0.12
+      slope: 12.0
+  - id: logistic_regression_features
+    params:
+      feature_columns: &tabular_features
+        - rr_count
+        - rr_mean
+        - rr_std
+        - rr_cv
+        - signal_mean
+        - signal_std
+        - signal_min
+        - signal_max
+        - signal_range
+      max_iter: 1000
+      class_weight: balanced
+  - id: random_forest_features
+    params:
+      feature_columns: *tabular_features
+      n_estimators: 200
+      class_weight: balanced
+
+metrics:
+  - n
+  - positive
+  - negative
+  - auroc
+  - average_precision
+  - accuracy
+  - f1
+  - sensitivity
+  - specificity

@@ -1,0 +1,10 @@
+FROM jupyter/pyspark-notebook:spark-3.5.0
+
+USER root
+COPY py_ecg_benchmark_pkg /tmp/py_ecg_benchmark_pkg
+RUN chown -R ${NB_UID}:${NB_GID} /tmp/py_ecg_benchmark_pkg
+
+USER ${NB_UID}
+RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu "torch>=2.1" \
+    && python -m pip install --no-cache-dir "/tmp/py_ecg_benchmark_pkg[raw]" \
+    && rm -rf /tmp/py_ecg_benchmark_pkg

@@ -1,0 +1,45 @@
+FROM python:3.11-slim-bookworm
+
+LABEL org.opencontainers.image.title="ECG-AF framework" \
+    org.opencontainers.image.source="https://github.com/dayveedaniel/ecg-af-framework" \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.version="0.1.0"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 ecg
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    SPARK_LOCAL_IP=127.0.0.1 \
+    SPARK_MASTER=local[*] \
+    PYTHONPATH=/app/py_ecg_benchmark_pkg/src:/app/data-pipeline/src:/app
+
+WORKDIR /app
+COPY LICENSE ./LICENSE
+COPY py_ecg_benchmark_pkg/pyproject.toml py_ecg_benchmark_pkg/README.md py_ecg_benchmark_pkg/LICENSE ./py_ecg_benchmark_pkg/
+COPY py_ecg_benchmark_pkg/src ./py_ecg_benchmark_pkg/src
+COPY data-pipeline/pyproject.toml data-pipeline/README.md data-pipeline/LICENSE ./data-pipeline/
+COPY data-pipeline/src ./data-pipeline/src
+
+# CPU PyTorch supports all included waveform baselines without a CUDA image.
+ARG INSTALL_TORCH=true
+RUN if [ "$INSTALL_TORCH" = "true" ]; then \
+        pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 'torch>=2.1'; \
+    fi \
+    && pip install --no-cache-dir ./py_ecg_benchmark_pkg ./data-pipeline
+
+COPY py_ecg_benchmark_pkg/examples ./py_ecg_benchmark_pkg/examples
+COPY py_ecg_benchmark_pkg/docs ./py_ecg_benchmark_pkg/docs
+COPY dashboard ./dashboard
+COPY data-pipeline/manifests ./data-pipeline/manifests
+COPY data-pipeline/scripts ./data-pipeline/scripts
+COPY data-pipeline/pipeline_config.yaml ./data-pipeline/
+RUN mkdir -p /app/py_ecg_benchmark_pkg/generated_configs /app/releases \
+    && chown -R ecg:ecg /app
+
+USER ecg
+EXPOSE 8765
+ENTRYPOINT ["ecg-bench"]
+CMD ["--help"]

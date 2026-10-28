@@ -1,0 +1,173 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env file}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+      until mc alias set local http://minio:9000 $${S3_ACCESS_KEY} $${S3_SECRET_KEY}; do sleep 1; done;
+      mc mb -p local/ecg-pipeline || true;
+      mc ls local;
+      "
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?Set PGADMIN_DEFAULT_EMAIL in env file}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Set PGADMIN_DEFAULT_PASSWORD in env file}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+
+  airflow-webserver:
+    profiles: ["airflow"]
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:?Set AIRFLOW__DATABASE__SQL_ALCHEMY_CONN in env file}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:?Set AIRFLOW__WEBSERVER__SECRET_KEY in env file}
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      PYTHONPATH: /opt/ecg-pipeline/src
+      PIPELINE_CONFIG_PATH: /opt/ecg-pipeline/pipeline_config.yaml
+      MANIFESTS_DIR: /opt/ecg-pipeline/manifests
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?Set S3_ENDPOINT_URL in env file}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+      POSTGRES_HOST: ${POSTGRES_HOST:?Set POSTGRES_HOST in env file}
+      POSTGRES_PORT: ${POSTGRES_PORT:?Set POSTGRES_PORT in env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env file}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/ecg-pipeline/src:ro
+      - ./manifests:/opt/ecg-pipeline/manifests:ro
+      - ./pipeline_config.yaml:/opt/ecg-pipeline/pipeline_config.yaml:ro
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg:ro
+    command: webserver
+
+  airflow-scheduler:
+    profiles: ["airflow"]
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:?Set AIRFLOW__DATABASE__SQL_ALCHEMY_CONN in env file}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:?Set AIRFLOW__WEBSERVER__SECRET_KEY in env file}
+      PYTHONPATH: /opt/ecg-pipeline/src
+      PIPELINE_CONFIG_PATH: /opt/ecg-pipeline/pipeline_config.yaml
+      MANIFESTS_DIR: /opt/ecg-pipeline/manifests
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?Set S3_ENDPOINT_URL in env file}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+      POSTGRES_HOST: ${POSTGRES_HOST:?Set POSTGRES_HOST in env file}
+      POSTGRES_PORT: ${POSTGRES_PORT:?Set POSTGRES_PORT in env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env file}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/ecg-pipeline/src:ro
+      - ./manifests:/opt/ecg-pipeline/manifests:ro
+      - ./pipeline_config.yaml:/opt/ecg-pipeline/pipeline_config.yaml:ro
+      - ./docker/airflow/airflow.cfg:/opt/airflow/airflow.cfg:ro
+    command: scheduler
+
+  airflow-init:
+    profiles: ["airflow"]
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:?Set AIRFLOW__DATABASE__SQL_ALCHEMY_CONN in env file}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:?Set AIRFLOW__WEBSERVER__SECRET_KEY in env file}
+      AIRFLOW_USERNAME: ${AIRFLOW_USERNAME:?Set AIRFLOW_USERNAME in env file}
+      AIRFLOW_PASSWORD: ${AIRFLOW_PASSWORD:?Set AIRFLOW_PASSWORD in env file}
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_USERNAME:?Set AIRFLOW_USERNAME in env file}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_PASSWORD:?Set AIRFLOW_PASSWORD in env file}
+      _AIRFLOW_WWW_USER_FIRSTNAME: ECG
+      _AIRFLOW_WWW_USER_LASTNAME: Pipeline
+      _AIRFLOW_WWW_USER_ROLE: Admin
+      _AIRFLOW_WWW_USER_EMAIL: airflow@example.com
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?Set S3_ENDPOINT_URL in env file}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+      POSTGRES_HOST: ${POSTGRES_HOST:?Set POSTGRES_HOST in env file}
+      POSTGRES_PORT: ${POSTGRES_PORT:?Set POSTGRES_PORT in env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env file}
+    volumes:
+      - ./dags:/opt/airflow/dags
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - >
+        airflow db migrate &&
+        airflow users create
+        --username "$${_AIRFLOW_WWW_USER_USERNAME}"
+        --password "$${_AIRFLOW_WWW_USER_PASSWORD}"
+        --firstname "$${_AIRFLOW_WWW_USER_FIRSTNAME}"
+        --lastname "$${_AIRFLOW_WWW_USER_LASTNAME}"
+        --role "$${_AIRFLOW_WWW_USER_ROLE}"
+        --email "$${_AIRFLOW_WWW_USER_EMAIL}" || true
+
+volumes:
+  postgres-data:
+  minio-data:
+  pgadmin-data:

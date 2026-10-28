@@ -1,0 +1,26 @@
+# Overlay on docker-compose.yaml; uses its existing catalog and data volumes.
+services:
+  benchmark:
+    image: ${ECG_BENCH_IMAGE:-ecg-af-benchmark:local}
+    build:
+      context: ..
+      dockerfile: Dockerfile.benchmark
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in env file}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in env file}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env file}
+      NO_PROXY: localhost,127.0.0.1,minio,postgres
+      no_proxy: localhost,127.0.0.1,minio,postgres
+    ports:
+      - "127.0.0.1:8765:8765"
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "8765", "--runner-backend", "local"]

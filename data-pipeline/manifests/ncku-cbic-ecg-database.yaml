@@ -1,0 +1,38 @@
+dataset:
+  name: "ncku-cbic-ecg-database"
+  display_name: "NCKU CBIC ECG Database"
+  version: "1.0.0"
+
+source:
+  url: "https://figshare.com/articles/dataset/NCKU_CBIC_ECG_Database/23807286"
+  provider: "figshare"
+
+force_redownload: false
+
+metadata:
+  description: "Single-lead (lead II) long-term ECG from 6 subjects sampled at 400 Hz, with per-R-peak arrhythmia labels (including AF and atrial flutter) and noise labels (motion artifact, baseline wander)."
+  citation: "Wei-Cheng T, Tai-Siang Z, Shuenn-Yuh L, Ju-Yi C. NCKU CBIC ECG Database. figshare (2023). Dataset. https://doi.org/10.6084/m9.figshare.23807286.v1"
+  license: "CC BY 4.0"
+  geographic_origin: "Tainan, Taiwan"
+  num_subjects: 6
+  num_recordings: 24
+  leads:
+    - "II"
+
+annotations:
+  adapter: "ncku_cbic_ecg_v1"
+  options:
+    sampling_rate_hz: 400
+    signal_filename: "OUTPUT_ECG_data.csv"
+    peak_position_filename: "OUTPUT_peak_position.csv"
+    peak_label_filename: "OUTPUT_peak_label.csv"
+  available: true
+  types:
+    - "beat_labels"
+    - "rhythm_labels"
+
+quirks:
+  - "Each subject was recorded at 4 times of day; data lives in '<subject>_<HHMM>' directories (e.g. 1_0100), one OUTPUT_ECG_data.csv per directory."
+  - "Per-R-peak label codes mix rhythm (1=AF, 2=SVT, 8=AFL, 7=first-degree AV block), beat (3=PVC, 4=APC), and noise (5=motion artifact, 6=baseline wander) classes."
+  - "Rhythm episodes are derived from runs of AF/AFL-coded R-peaks; all R-peaks are emitted as beat annotations."
+  - "ECG units are 0.1 V as distributed; signal values are kept as stored."
