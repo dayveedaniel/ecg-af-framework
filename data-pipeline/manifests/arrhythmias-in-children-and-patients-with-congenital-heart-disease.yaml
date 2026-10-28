@@ -11,7 +11,7 @@ force_redownload: false
 
 metadata:
   description: "Single-lead and two-lead long-term ECG recordings from children and adults with congenital heart disease, with beat and rhythm annotations."
-  citation: "Nospes S, et al. Leipzig Heart Center ECG Database. PhysioNet (v1.0.0). https://physionet.org/content/leipzig-heart-center-ecg/1.0.0/"
+  citation: "Klehs S, Franke D, Alhamad B, Gebauer R, Teich L, Teich T, Paech C. Leipzig Heart Center ECG-Database: Arrhythmias in Children and Patients with Congenital Heart Disease. PhysioNet (v1.0.0). 2025. https://doi.org/10.13026/7a4j-vn37"
   license: "ODC-By 1.0"
   geographic_origin: "Leipzig, Germany"
   num_subjects: 218

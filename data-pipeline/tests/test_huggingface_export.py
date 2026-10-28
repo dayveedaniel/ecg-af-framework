@@ -82,6 +82,10 @@ class ExportTests(unittest.TestCase):
             card = (folder / "README.md").read_text()
             self.assertIn("ODC-By 1.0", card)
             self.assertIn("split: recordings", card)
+            self.assertIn("derived, harmonized release", card)
+            self.assertIn("ECG-AF framework", card)
+            self.assertIn("did not collect new patient recordings", card)
+            self.assertIn("one signal Parquet + optional annotation JSON per recording", card)
 
     def test_rejects_paths_outside_dataset(self):
         for uri in ["s3://other/" + self.signal,

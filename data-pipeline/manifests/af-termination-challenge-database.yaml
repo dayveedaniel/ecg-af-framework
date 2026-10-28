@@ -11,7 +11,7 @@ force_redownload: false
 
 metadata:
   description: "One-minute ECG excerpts preceding spontaneous AF termination or continuation, with beat annotations."
-  citation: "Petrutiu S, et al. AF Termination Challenge Database. PhysioNet v1.0.0. https://physionet.org/content/aftdb/1.0.0/"
+  citation: "Moody GB. Spontaneous Termination of Atrial Fibrillation: A Challenge from PhysioNet and Computers in Cardiology 2004. Computers in Cardiology. 2004;31:101-104. Dataset: PhysioNet AFTDB v1.0.0. https://physionet.org/content/aftdb/1.0.0/"
   license: "ODC-By 1.0"
   geographic_origin: "Europe"
   num_subjects: 50

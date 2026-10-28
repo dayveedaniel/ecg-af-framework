@@ -11,7 +11,7 @@ force_redownload: false
 
 metadata:
   description: "Two-lead long-term ECG recordings from CPSC 2021 with paroxysmal, persistent, and non-AF rhythm annotations."
-  citation: "CPSC 2021 Challenge Dataset (Paroxysmal AF Event Detection), PhysioNet v1.0.0. https://physionet.org/content/cpsc2021/1.0.0/"
+  citation: "Wang X, Ma C, Zhang X, Gao H, Clifford GD, Liu C. Paroxysmal Atrial Fibrillation Events Detection from Dynamic ECG Recordings: The 4th China Physiological Signal Challenge 2021. PhysioNet (v1.0.0). 2021. https://doi.org/10.13026/ksya-qw89"
   license: "CC BY 4.0"
   geographic_origin: "China"
   num_subjects: null

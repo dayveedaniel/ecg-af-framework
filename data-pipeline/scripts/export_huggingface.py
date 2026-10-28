@@ -136,7 +136,13 @@ def export_subset(client, bucket: str, prefix: str, objects: dict, manifest: dic
     return {"name": name, "recordings": len(rows), "bytes": sum(objects[k]["Size"] for k in referenced)}
 
 
-def write_card(folder: Path, manifests: list[dict], summaries: list[dict], repo_id: str) -> None:
+def write_card(
+    folder: Path,
+    manifests: list[dict],
+    summaries: list[dict],
+    repo_id: str,
+    framework_ref: str = "main",
+) -> None:
     license_ids = sorted({LICENSES[m["metadata"]["license"]][0] for m in manifests})
     header = {
         "license": license_ids,
@@ -147,8 +153,13 @@ def write_card(folder: Path, manifests: list[dict], summaries: list[dict], repo_
         ]} for s in summaries],
     }
     citations = []
+    summary_rows = []
     for m, s in zip(manifests, summaries):
         license_name = m["metadata"]["license"]
+        summary_rows.append(
+            f"| [{m['dataset']['display_name']}]({m['source']['url']}) "
+            f"| {s['recordings']:,} | {s['bytes'] / 1_000_000_000:.2f} GB | {license_name} |"
+        )
         citations.append(
             f"### {m['dataset']['display_name']}\n\n"
             f"- Source: {m['source']['url']} (version {m['dataset']['version']})\n"
@@ -156,20 +167,73 @@ def write_card(folder: Path, manifests: list[dict], summaries: list[dict], repo_
             f"- Exported recordings: {s['recordings']}\n"
             f"- Citation: {m['metadata']['citation']}\n"
         )
+    total_recordings = sum(s["recordings"] for s in summaries)
+    total_bytes = sum(s["bytes"] for s in summaries)
+    recording_word = "recording" if total_recordings == 1 else "recordings"
+    summary_table = "\n".join([
+        "| Source subset | Recordings | Processed payload | Source license |",
+        "| --- | ---: | ---: | --- |",
+        *summary_rows,
+        f"| **Total** | **{total_recordings:,}** | **{total_bytes / 1_000_000_000:.2f} GB** | Mixed; see each source |",
+    ])
     card = "---\n" + yaml.safe_dump(header, sort_keys=False) + "---\n\n"
-    card += """# ECG-AF processed ECG collection
+    card += f"""# ECG-AF processed ECG collection
 
-A harmonized collection derived from the sources below using the ECG-AF
-pipeline. Credit for the original recordings and annotations belongs to their
-respective creators. Each subset retains its source license; the license list
-above is not a choice of license for every file.
+## What this dataset is
+
+This is a **derived, harmonized release produced by the
+[ECG-AF framework](https://github.com/dayveedaniel/ecg-af-framework/tree/{framework_ref})**. The
+ECG-AF project did not collect new patient recordings. It downloaded the public
+source datasets listed below, converted their heterogeneous signal and
+annotation formats into one representation, and exported the framework's
+processed layer to Hugging Face.
+
+This release contains **{total_recordings:,} processed ECG {recording_word} at 250 Hz**
+with their available annotations, recording-level metadata, source provenance,
+and integrity checksums. The exact framework commit is recorded in
+`release.json`; this card links the same source revision above.
+
+{summary_table}
+
+Credit for the original recordings and annotations belongs to their respective
+creators. Each subset retains its source license; the license list in the card
+metadata is not a choice of license for every file.
+
+## How ECG-AF derived this release
+
+```text
+Public source archive
+  -> ECG-AF provider downloader and format reader
+  -> source-specific annotation adapter
+  -> signal resampling to 250 Hz (no amplitude normalization)
+  -> one signal Parquet + optional annotation JSON per recording
+  -> recording index, provenance manifest, and SHA-256 checksums
+```
+
+The framework preserves source recording/subject identifiers and records the
+original sampling rate, channel names, units, source format, and annotation
+availability. It does not add model predictions or impose benchmark labels or
+train/validation/test splits.
 
 ## Data layout and use
 
-The Dataset Viewer and `datasets.load_dataset` expose **one row per recording**
-from the JSONL recording index. `parquet_path` and `annotations_path` are paths
-relative to this repository, not external S3 addresses. Download the actual
-waveforms and annotations using `huggingface_hub.snapshot_download`:
+The Dataset Viewer and `datasets.load_dataset` expose **one metadata row per
+recording** from each subset's JSONL index:
+
+```python
+from datasets import load_dataset
+
+records = load_dataset(
+    "OWNER/REPO",
+    "cpsc-2021-paroxysmal-af-event-detection-dataset",
+    split="recordings",
+)
+print(records[0]["parquet_path"])
+```
+
+`parquet_path` and `annotations_path` are paths relative to this repository, not
+external S3 addresses. Download the actual waveforms and annotations with
+`huggingface_hub.snapshot_download`:
 
 ```python
 import json
@@ -240,6 +304,11 @@ def main(argv=None) -> int:
     parser.add_argument("--dataset", action="append", help="Exact manifest dataset name; repeat to select subsets.")
     parser.add_argument("--output", type=Path, help="New export directory. Omit for inventory only.")
     parser.add_argument("--repo-id", default="OWNER/REPO", help="Hugging Face owner/name for the card example.")
+    parser.add_argument(
+        "--framework-ref",
+        default="main",
+        help="ECG-AF Git commit or tag used to derive the release; linked from the dataset card.",
+    )
     args = parser.parse_args(argv)
     if args.rate <= 0:
         parser.error("--rate must be positive")
@@ -277,7 +346,7 @@ def main(argv=None) -> int:
         folder = Path(temp)
         summaries = [export_subset(client, args.bucket, prefix, objects, m, folder)
                      for m, prefix, objects in selections]
-        write_card(folder, manifests, summaries, args.repo_id)
+        write_card(folder, manifests, summaries, args.repo_id, args.framework_ref)
         revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
                                   capture_output=True, text=True, check=True).stdout.strip()
         dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
